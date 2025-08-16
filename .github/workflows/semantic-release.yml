@@ -1,0 +1,58 @@
+name: Semantic Release
+
+on:
+  workflow_call:
+    inputs:
+      VERBOSE:
+        type: boolean
+        default: false
+        required: false
+        description: 'Enable verbose output'
+      DRY_RUN:
+        type: boolean
+        default: false
+        required: false
+        description: 'Run in dry-run mode'
+      BUILD:
+        type: boolean
+        default: false
+        required: false
+        description: 'Run build script if available'
+    secrets:
+      GH_TOKEN:
+        required: true
+        description: 'GitHub token for authentication'
+      NPM_TOKEN:
+        required: false
+        description: 'NPM token for publishing packages'
+
+jobs:
+  semantic-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Show Inputs
+        if: ${{ inputs.VERBOSE }}
+        shell: bash
+        run: |
+          echo "VERBOSE: ${{ inputs.VERBOSE }}"
+          echo "DRY_RUN: ${{ inputs.DRY_RUN }}"
+          echo "BUILD: ${{ inputs.BUILD }}"
+          echo "GH_TOKEN is set: ${{ secrets.GH_TOKEN != '' }}"
+
+      - name: Setup Environment
+        uses: SP-libraries/actions/.github/actions/setup-environment@main
+        with:
+          FETCH_DEPTH: 0
+          SETUP_PHP: true
+          SETUP_NODE: true
+          INSTALL_DEPENDENCIES: true
+          INSTALL_DEV_DEPENDENCIES: true
+          VERBOSE: ${{ inputs.VERBOSE }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+
+      - name: Run Semantic Release
+        run: npx semantic-release --dry-run=${{ inputs.DRY_RUN }}
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}

@@ -1,0 +1,72 @@
+name: Code Quality
+
+on:
+  workflow_call:
+    inputs:
+      VERBOSE:
+        type: boolean
+        default: false
+        required: false
+        description: 'Enable verbose output'
+      LINT_PHP:
+        type: boolean
+        default: false
+        required: false
+        description: 'Run PHP linting and setup'
+      LINT_NODE:
+        type: boolean
+        default: false
+        required: false
+        description: 'Run Node.js linting and setup'
+    secrets:
+      GH_TOKEN:
+        required: true
+        description: 'GitHub token for authentication'
+
+jobs:
+  code-quality:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        include:
+          - language: php
+            php: 8.2
+            node: ''
+          - language: php
+            php: 8.3
+            node: ''
+          - language: node
+            php: ''
+            node: 20
+          - language: node
+            php: ''
+            node: 21
+
+    steps:
+      - name: Show Inputs
+        if: ${{ inputs.VERBOSE }}
+        run: |
+          echo "VERBOSE: ${{ inputs.VERBOSE }}"
+          echo "LINT_PHP: ${{ inputs.LINT_PHP }}"
+          echo "LINT_NODE: ${{ inputs.LINT_NODE }}"
+          echo "GH_TOKEN is set: ${{ secrets.GH_TOKEN != '' }}"
+
+      - name: Setup Environment
+        if: >
+          (matrix.language == 'php' && inputs.LINT_PHP) ||
+          (matrix.language == 'node' && inputs.LINT_NODE)
+        uses: SP-Libraries/actions/.github/actions/setup-environment@main
+        with:
+          FETCH_DEPTH: 0
+          SETUP_PHP: ${{ matrix.language == 'php' }}
+          SETUP_NODE: ${{ matrix.language == 'node' }}
+          INSTALL_DEPENDENCIES: true
+          INSTALL_DEV_DEPENDENCIES: true
+          PHP_VERSION: ${{ matrix.php }}
+          NODE_VERSION: ${{ matrix.node }}
+          VERBOSE: ${{ inputs.VERBOSE }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+
+      - name: Run LintRC
+        run: npx @sp-packages/lintrc ${{ inputs.VERBOSE && '--verbose' || '' }}
