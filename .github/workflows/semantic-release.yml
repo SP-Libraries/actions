@@ -44,7 +44,6 @@ jobs:
         uses: SP-libraries/actions/.github/actions/setup-environment@main
         with:
           FETCH_DEPTH: 0
-          SETUP_PHP: true
           SETUP_NODE: true
           INSTALL_DEPENDENCIES: true
           INSTALL_DEV_DEPENDENCIES: true
