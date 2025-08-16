@@ -1,3 +1,9 @@
+## [0.5.0](https://github.com/SP-Libraries/actions/compare/v0.4.0...v0.5.0) (2025-08-16)
+
+### Features
+
+* **workflows:** enhance language detection and output handling ([e52251c](https://github.com/SP-Libraries/actions/commit/e52251c9b1dd90912a25dea9be74c821a28af90b))
+
 ## [0.4.0](https://github.com/SP-Libraries/actions/compare/v0.3.0...v0.4.0) (2025-08-16)
 
 ### Features
