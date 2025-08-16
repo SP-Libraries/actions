@@ -69,4 +69,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
       - name: Run LintRC
+        if: >
+          (matrix.language == 'php' && inputs.LINT_PHP) ||
+          (matrix.language == 'node' && inputs.LINT_NODE)
         run: npx @sp-packages/lintrc ${{ inputs.VERBOSE && '--verbose' || '' }}
