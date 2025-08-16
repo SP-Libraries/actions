@@ -20,6 +20,7 @@ jobs:
       run_php: ${{ steps.detect.outputs.run_php }}
       run_node: ${{ steps.detect.outputs.run_node }}
     steps:
+      - uses: actions/checkout@v4
       - name: Detect languages
         id: detect
         shell: bash
@@ -61,8 +62,6 @@ jobs:
             node: 21
 
     steps:
-      - uses: actions/checkout@v4
-
       - name: Show Inputs
         if: ${{ inputs.VERBOSE }}
         run: |
