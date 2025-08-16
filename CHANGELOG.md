@@ -1,3 +1,9 @@
+## [0.2.0](https://github.com/SP-Libraries/actions/compare/v0.1.0...v0.2.0) (2025-08-16)
+
+### Features
+
+* **workflows:** enhance language detection and linting configuration ([d51c601](https://github.com/SP-Libraries/actions/commit/d51c601a53dd6d97faf5c214d674a59eb736d392))
+
 ## [0.1.0](https://github.com/SP-Libraries/actions/compare/v0.0.0...v0.1.0) (2025-08-16)
 
 ### Features
