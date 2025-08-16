@@ -1,3 +1,9 @@
+## [0.3.0](https://github.com/SP-Libraries/actions/compare/v0.2.0...v0.3.0) (2025-08-16)
+
+### Features
+
+* **workflows:** remove RUN_PHP and RUN_NODE inputs for linting ([b0d620c](https://github.com/SP-Libraries/actions/commit/b0d620ca63bf5292d3af61ed7242056e9948b0c1))
+
 ## [0.2.0](https://github.com/SP-Libraries/actions/compare/v0.1.0...v0.2.0) (2025-08-16)
 
 ### Features
