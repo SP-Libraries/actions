@@ -19,6 +19,7 @@ jobs:
     outputs:
       run_php: ${{ steps.detect.outputs.run_php }}
       run_node: ${{ steps.detect.outputs.run_node }}
+      run_both: ${{ steps.detect.outputs.run_both }}
     steps:
       - uses: actions/checkout@v4
       - name: Detect languages
@@ -27,8 +28,8 @@ jobs:
         run: |
           run_php=false
           run_node=false
+          run_both=false
 
-          # Force if inputs are set
           if [ -f "composer.json" ]; then
             run_php=true
           fi
@@ -37,10 +38,15 @@ jobs:
             run_node=true
           fi
 
-          echo "run_php=$run_php" >> $GITHUB_OUTPUT
-          echo "run_node=$run_node" >> $GITHUB_OUTPUT
+          if [ "$run_php" = "true" ] && [ "$run_node" = "true" ]; then
+            run_both=true
+          fi
 
-          echo "Detected RUN_PHP=$run_php, RUN_NODE=$run_node"
+          echo "run_php=$run_php"   >> $GITHUB_OUTPUT
+          echo "run_node=$run_node" >> $GITHUB_OUTPUT
+          echo "run_both=$run_both" >> $GITHUB_OUTPUT
+
+          echo "Detected RUN_PHP=$run_php, RUN_NODE=$run_node, RUN_BOTH=$run_both"
 
   code-quality:
     needs: detect-languages
@@ -50,34 +56,38 @@ jobs:
         include:
           - language: php
             php: 8.2
-            node: ''
           - language: php
             php: 8.3
-            node: ''
           - language: node
-            php: ''
             node: 20
           - language: node
-            php: ''
             node: 21
+          - language: php-node
+            php: 8.2
+            node: 20
+          - language: php-node
+            php: 8.3
+            node: 20
 
     steps:
       - name: Show Inputs
         if: ${{ inputs.VERBOSE }}
         run: |
           echo "VERBOSE: ${{ inputs.VERBOSE }}"
-          echo "RUN_PHP (final): ${{ needs.detect-languages.outputs.run_php }}"
-          echo "RUN_NODE (final): ${{ needs.detect-languages.outputs.run_node }}"
+          echo "RUN_PHP:  ${{ needs.detect-languages.outputs.run_php }}"
+          echo "RUN_NODE: ${{ needs.detect-languages.outputs.run_node }}"
+          echo "RUN_BOTH: ${{ needs.detect-languages.outputs.run_both }}"
 
       - name: Setup Environment
         if: >
-          (matrix.language == 'php' && needs.detect-languages.outputs.run_php == 'true') ||
-          (matrix.language == 'node' && needs.detect-languages.outputs.run_node == 'true')
+          (matrix.language == 'php'      && needs.detect-languages.outputs.run_php == 'true'   && needs.detect-languages.outputs.run_both == 'false') ||
+          (matrix.language == 'node'     && needs.detect-languages.outputs.run_node == 'true'  && needs.detect-languages.outputs.run_both == 'false') ||
+          (matrix.language == 'php-node' && needs.detect-languages.outputs.run_both == 'true')
         uses: SP-Libraries/actions/.github/actions/setup-environment@main
         with:
           FETCH_DEPTH: 0
-          SETUP_PHP: ${{ matrix.language == 'php' }}
-          SETUP_NODE: ${{ matrix.language == 'node' }}
+          SETUP_PHP: ${{ matrix.language == 'php' || matrix.language == 'php-node' }}
+          SETUP_NODE: ${{ matrix.language == 'node' || matrix.language == 'php-node' }}
           INSTALL_DEPENDENCIES: true
           INSTALL_DEV_DEPENDENCIES: true
           PHP_VERSION: ${{ matrix.php }}
@@ -87,6 +97,7 @@ jobs:
 
       - name: Run LintRC
         if: >
-          (matrix.language == 'php' && needs.detect-languages.outputs.run_php == 'true') ||
-          (matrix.language == 'node' && needs.detect-languages.outputs.run_node == 'true')
+          (matrix.language == 'php'      && needs.detect-languages.outputs.run_php == 'true'   && needs.detect-languages.outputs.run_both == 'false') ||
+          (matrix.language == 'node'     && needs.detect-languages.outputs.run_node == 'true'  && needs.detect-languages.outputs.run_both == 'false') ||
+          (matrix.language == 'php-node' && needs.detect-languages.outputs.run_both == 'true')
         run: npx @sp-packages/lintrc ${{ inputs.VERBOSE && '--verbose' || '' }}
