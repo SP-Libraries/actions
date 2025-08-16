@@ -8,16 +8,6 @@ on:
         default: false
         required: false
         description: 'Enable verbose output'
-      RUN_PHP:
-        type: boolean
-        default: false
-        required: false
-        description: 'Force PHP linting (true/false). If not set, auto-detects from composer.json'
-      RUN_NODE:
-        type: boolean
-        default: false
-        required: false
-        description: 'Force Node.js linting (true/false). If not set, auto-detects from package.json'
     secrets:
       GH_TOKEN:
         required: true
@@ -38,19 +28,11 @@ jobs:
           run_node=false
 
           # Force if inputs are set
-          if [ "${{ inputs.RUN_PHP }}" == "true" ]; then
-            run_php=true
-          elif [ "${{ inputs.RUN_PHP }}" == "false" ]; then
-            run_php=false
-          elif [ -f "composer.json" ]; then
+          if [ -f "composer.json" ]; then
             run_php=true
           fi
 
-          if [ "${{ inputs.RUN_NODE }}" == "true" ]; then
-            run_node=true
-          elif [ "${{ inputs.RUN_NODE }}" == "false" ]; then
-            run_node=false
-          elif [ -f "package.json" ]; then
+          if [ -f "package.json" ]; then
             run_node=true
           fi
 
