@@ -1,3 +1,9 @@
+## [0.4.0](https://github.com/SP-Libraries/actions/compare/v0.3.0...v0.4.0) (2025-08-16)
+
+### Features
+
+* **workflows:** add checkout step for language detection job ([ccb30b5](https://github.com/SP-Libraries/actions/commit/ccb30b5a4bca92ffbd44e7600fb7369801341335))
+
 ## [0.3.0](https://github.com/SP-Libraries/actions/compare/v0.2.0...v0.3.0) (2025-08-16)
 
 ### Features
