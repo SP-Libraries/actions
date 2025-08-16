@@ -10,8 +10,6 @@ jobs:
     uses: ./.github/workflows/code-quality.yml
     with:
       VERBOSE: true
-      LINT_PHP: false
-      LINT_NODE: true
     secrets:
       GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
