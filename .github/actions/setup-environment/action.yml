@@ -1,0 +1,258 @@
+name: Setup Environment
+
+inputs:
+  VERBOSE:
+    type: boolean
+    default: false
+    required: false
+    description: 'Enable verbose output'
+  FETCH_DEPTH:
+    required: false
+    type: number
+    default: 1
+    description: 'Git fetch depth (0 for all history)'
+  SETUP_PHP:
+    type: boolean
+    default: false
+    required: false
+    description: 'Set to true to include PHP setup'
+  PHP_VERSION:
+    type: string
+    default: '8.3'
+    required: false
+    description: 'PHP version to install'
+  SETUP_NODE:
+    type: boolean
+    default: false
+    required: false
+    description: 'Set to true to include Node.js setup'
+  NODE_VERSION:
+    type: string
+    default: '21'
+    required: false
+    description: 'Node.js version to install'
+  CACHE_KEY_PREFIX:
+    type: string
+    default: 'deps'
+    required: false
+    description: 'Prefix for the cache key'
+  INSTALL_DEPENDENCIES:
+    type: boolean
+    default: false
+    required: false
+    description: 'Set to true to include dependency installation'
+  INSTALL_DEV_DEPENDENCIES:
+    type: boolean
+    default: false
+    required: false
+    description: 'Set to true to include dev dependencies'
+  RUN_BUILD:
+    type: boolean
+    default: false
+    required: false
+    description: 'Set to true to run the build step'
+  GH_TOKEN:
+    type: string
+    default: ''
+    required: false
+    description: 'GitHub token for authentication'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Show Inputs
+      if: ${{ inputs.VERBOSE == 'true' }}
+      shell: bash
+      run: |
+        echo "VERBOSE: ${{ inputs.VERBOSE }}"
+        echo "SETUP_PHP: ${{ inputs.SETUP_PHP }}"
+        echo "PHP_VERSION: ${{ inputs.PHP_VERSION }}"
+        echo "SETUP_NODE: ${{ inputs.SETUP_NODE }}"
+        echo "NODE_VERSION: ${{ inputs.NODE_VERSION }}"
+        echo "CACHE_KEY_PREFIX: ${{ inputs.CACHE_KEY_PREFIX }}"
+        echo "INSTALL_DEPENDENCIES: ${{ inputs.INSTALL_DEPENDENCIES }}"
+        echo "INSTALL_DEV_DEPENDENCIES: ${{ inputs.INSTALL_DEV_DEPENDENCIES }}"
+        echo "RUN_BUILD: ${{ inputs.RUN_BUILD }}"
+
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+      with:
+        token: ${{ inputs.GH_TOKEN }}
+        fetch-depth: ${{ inputs.FETCH_DEPTH }}
+
+    - name: Check Project Files
+      id: check-files
+      shell: bash
+      run: |
+        # Check for necessary files
+        if [[ -f "composer.json" ]]; then
+          echo "composer-json-exists=true" >> $GITHUB_OUTPUT
+          echo "✅ composer.json found"
+        else
+          echo "composer-json-exists=false" >> $GITHUB_OUTPUT
+          echo "❌ composer.json not found"
+        fi
+
+        if [[ -f "composer.lock" ]]; then
+          echo "composer-lock-exists=true" >> $GITHUB_OUTPUT
+          echo "✅ composer.lock found"
+        else
+          echo "composer-lock-exists=false" >> $GITHUB_OUTPUT
+          echo "❌ composer.lock not found"
+        fi
+
+        # Check for Node.js files
+        if [[ -f "package.json" ]]; then
+          echo "package-json-exists=true" >> $GITHUB_OUTPUT
+          echo "✅ package.json found"
+        else
+          echo "package-json-exists=false" >> $GITHUB_OUTPUT
+          echo "❌ package.json not found"
+        fi
+
+        if [[ -f "package-lock.json" ]]; then
+          echo "package-lock-exists=true" >> $GITHUB_OUTPUT
+          echo "✅ package-lock.json found"
+        else
+          echo "package-lock-exists=false" >> $GITHUB_OUTPUT
+          echo "❌ package-lock.json not found"
+        fi
+
+        # Check if build script exists in package.json (only if package.json exists)
+        if [[ -f "package.json" ]]; then
+          if jq -e '.scripts.build' package.json > /dev/null 2>&1; then
+            echo "build-script-exists=true" >> $GITHUB_OUTPUT
+            echo "✅ Build script found in package.json"
+          else
+            echo "build-script-exists=false" >> $GITHUB_OUTPUT
+            echo "❌ No build script found in package.json"
+          fi
+        else
+          echo "build-script-exists=false" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Validate Project Configuration
+      shell: bash
+      run: |
+        # Validate configuration
+        if [[ "${{ inputs.SETUP_PHP }}" == "true" && "${{ steps.check-files.outputs.composer-json-exists }}" == "false" ]]; then
+          echo "::warning::PHP setup requested but composer.json not found"
+        fi
+
+        # Validate Node.js configuration
+        if [[ "${{ inputs.SETUP_NODE }}" == "true" && "${{ steps.check-files.outputs.package-json-exists }}" == "false" ]]; then
+          echo "::warning::Node.js setup requested but package.json not found"
+        fi
+
+        # Validate build configuration
+        if [[ "${{ inputs.RUN_BUILD }}" == "true" && "${{ steps.check-files.outputs.build-script-exists }}" == "false" ]]; then
+          echo "::warning::Build requested but no build script found in package.json"
+        fi
+
+    - name: Setup PHP
+      if: ${{ inputs.SETUP_PHP == 'true' }}
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: ${{ inputs.PHP_VERSION }}
+        tools: composer
+
+    - name: Setup Node.js
+      if: ${{ inputs.SETUP_NODE == 'true' }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: package-lock.json
+
+    - name: Get Composer Cache Directory
+      if: ${{ inputs.SETUP_PHP == 'true' && steps.check-files.outputs.composer-json-exists == 'true' }}
+      id: composer-cache
+      run: echo "dir=$(composer config cache-dir)" >> $GITHUB_OUTPUT
+      shell: bash
+
+    - name: Cache Dependencies
+      if: ${{ (inputs.SETUP_PHP == 'true' && steps.check-files.outputs.composer-json-exists == 'true') || (inputs.SETUP_NODE == 'true' && steps.check-files.outputs.package-json-exists == 'true') }}
+      uses: actions/cache@v4
+      with:
+        path: |
+          ${{ inputs.SETUP_PHP == 'true' && steps.check-files.outputs.composer-json-exists == 'true' && steps.composer-cache.outputs.dir || '' }}
+          ${{ inputs.SETUP_NODE == 'true' && steps.check-files.outputs.package-json-exists == 'true' && '~/.npm' || '' }}
+        key: ${{ inputs.CACHE_KEY_PREFIX }}-${{ runner.os }}-php${{ inputs.PHP_VERSION }}-node${{ inputs.NODE_VERSION }}-dev${{ inputs.INSTALL_DEV_DEPENDENCIES }}-${{ hashFiles('**/composer.lock', '**/package-lock.json') }}
+        restore-keys: |
+          ${{ inputs.CACHE_KEY_PREFIX }}-${{ runner.os }}-php${{ inputs.PHP_VERSION }}-node${{ inputs.NODE_VERSION }}-dev${{ inputs.INSTALL_DEV_DEPENDENCIES }}-
+          ${{ inputs.CACHE_KEY_PREFIX }}-${{ runner.os }}-php${{ inputs.PHP_VERSION }}-node${{ inputs.NODE_VERSION }}-
+          ${{ inputs.CACHE_KEY_PREFIX }}-${{ runner.os }}-php${{ inputs.PHP_VERSION }}-
+          ${{ inputs.CACHE_KEY_PREFIX }}-${{ runner.os }}-
+
+    - name: Composer Validate
+      if: ${{ inputs.SETUP_PHP == 'true' && steps.check-files.outputs.composer-json-exists == 'true' && inputs.INSTALL_DEPENDENCIES == 'true' }}
+      shell: bash
+      run: composer validate --no-check-all --no-check-publish --no-interaction --strict
+
+    - name: Install PHP Dependencies
+      if: ${{ inputs.SETUP_PHP == 'true' && steps.check-files.outputs.composer-json-exists == 'true' && inputs.INSTALL_DEPENDENCIES == 'true' }}
+      shell: bash
+      env:
+        COMPOSER_AUTH: |
+          {
+            "github-oauth": {
+              "github.com": "${{ inputs.GH_TOKEN }}"
+            }
+          }
+      run: |
+        if [[ "${{ inputs.INSTALL_DEV_DEPENDENCIES }}" == "true" ]]; then
+          composer install --no-interaction --no-scripts
+        else
+          composer install --no-interaction --no-scripts --no-dev --prefer-dist --optimize-autoloader
+        fi
+
+    - name: Install Node.js Dependencies
+      if: ${{ inputs.SETUP_NODE == 'true' && steps.check-files.outputs.package-json-exists == 'true' && inputs.INSTALL_DEPENDENCIES == 'true' }}
+      shell: bash
+      run: |
+        if [[ "${{ inputs.INSTALL_DEV_DEPENDENCIES }}" == "true" ]]; then
+          npm ci
+        else
+          export NODE_ENV=production
+          npm ci --omit=dev
+        fi
+
+    - name: Run Build Step
+      if: ${{ inputs.RUN_BUILD == 'true' && inputs.INSTALL_DEPENDENCIES == 'true' && steps.check-files.outputs.build-script-exists == 'true' }}
+      shell: bash
+      run: npm run build
+
+    - name: Show Environment Info
+      if: ${{ inputs.VERBOSE == 'true' }}
+      shell: bash
+      run: |
+        echo "=== Environment Information ==="
+
+        echo "--- Project Files Status ---"
+        echo "composer.json exists: ${{ steps.check-files.outputs.composer-json-exists }}"
+        echo "composer.lock exists: ${{ steps.check-files.outputs.composer-lock-exists }}"
+        echo "package.json exists: ${{ steps.check-files.outputs.package-json-exists }}"
+        echo "package-lock.json exists: ${{ steps.check-files.outputs.package-lock-exists }}"
+        echo "build script exists: ${{ steps.check-files.outputs.build-script-exists }}"
+
+        echo "--- Tool Versions ---"
+        if [[ "${{ inputs.SETUP_PHP }}" == "true" ]]; then
+          echo "PHP version:"
+          php -v || echo "PHP not installed"
+          echo "Composer version:"
+          composer -V || echo "Composer not installed"
+        fi
+
+        if [[ "${{ inputs.SETUP_NODE }}" == "true" ]]; then
+          echo "Node.js version:"
+          node -v || echo "Node.js not installed"
+          echo "NPM version:"
+          npm -v || echo "NPM not installed"
+        fi
+
+        echo "--- Cache Information ---"
+        echo "Cache key prefix: ${{ inputs.CACHE_KEY_PREFIX }}"
+
+        if [[ "${{ inputs.SETUP_PHP }}" == "true" && "${{ steps.check-files.outputs.composer-json-exists }}" == "true" ]]; then
+          echo "Composer cache directory: ${{ steps.composer-cache.outputs.dir }}"
+        fi
