@@ -1,0 +1,30 @@
+name: Publish
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  prepare:
+    uses: ./.github/workflows/code-quality.yml
+    with:
+      VERBOSE: true
+    secrets:
+      GH_TOKEN: ${{ secrets.GH_TOKEN }}
+
+  release:
+    needs: prepare
+    uses: ./.github/workflows/semantic-release.yml
+    with:
+      VERBOSE: true
+    secrets:
+      GH_TOKEN: ${{ secrets.GH_TOKEN }}
+
+  sync:
+    needs: release
+    uses: ./.github/workflows/sync-branch.yml
+    with:
+      VERBOSE: true
+    secrets:
+      GH_TOKEN: ${{ secrets.GH_TOKEN }}
