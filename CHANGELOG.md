@@ -1,3 +1,9 @@
+## [0.3.1](https://github.com/SP-Libraries/actions/compare/v0.3.0...v0.3.1) (2025-08-18)
+
+### Bug Fixes
+
+* **workflows:** remove unnecessary BUILD_DIR environment variable ([832bf72](https://github.com/SP-Libraries/actions/commit/832bf728b56f3a11d0bce87267b09fc6fe4cb14a))
+
 ## [0.3.0](https://github.com/SP-Libraries/actions/compare/v0.2.1...v0.3.0) (2025-08-18)
 
 ### Features
