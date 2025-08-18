@@ -1,0 +1,88 @@
+name: Sync develop with main
+
+on:
+  workflow_call:
+    inputs:
+      VERBOSE:
+        type: boolean
+        default: false
+        required: false
+        description: 'Set to true to enable verbose output'
+    secrets:
+      GH_TOKEN:
+        required: true
+        description: 'GitHub token for authentication'
+
+jobs:
+  sync-branch:
+    runs-on: ubuntu-latest
+    env:
+      TARGET_BRANCH: develop
+    steps:
+      - name: Show Inputs
+        if: ${{ inputs.VERBOSE }}
+        shell: bash
+        run: |
+          echo "VERBOSE: ${{ inputs.VERBOSE }}"
+          echo "GH_TOKEN is set: ${{ secrets.GH_TOKEN != '' }}"
+
+      - name: Setup Git user
+        shell: bash
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+          if [[ "$VERBOSE" == 'true' ]]; then
+            echo "Configured git user as github-actions"
+          fi
+
+      - name: Setup Environment
+        uses: SP-libraries/actions/.github/actions/setup-environment@main
+        with:
+          FETCH_DEPTH: 0
+          VERBOSE: ${{ inputs.VERBOSE }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+
+      - name: Ensure develop branch exists
+        shell: bash
+        run: |
+          if ! git show-ref --verify --quiet refs/heads/${TARGET_BRANCH}; then
+            echo "No ${TARGET_BRANCH} branch found. Creating from main."
+            git checkout -b ${TARGET_BRANCH} origin/main
+            git push origin ${TARGET_BRANCH}
+            if [[ "$VERBOSE" == 'true' ]]; then
+              echo "Created and pushed new branch ${TARGET_BRANCH} from main."
+            fi
+          else
+            if [[ "$VERBOSE" == 'true' ]]; then
+              echo "Branch ${TARGET_BRANCH} already exists."
+            fi
+          fi
+
+      - name: Fetch all branches
+        shell: bash
+        run: |
+          git fetch --all
+          if [[ "$VERBOSE" == 'true' ]]; then
+            echo "Fetched all branches from remote."
+          fi
+
+      - name: Rebase develop onto main
+        shell: bash
+        run: |
+          git checkout ${TARGET_BRANCH}
+          if [[ "$VERBOSE" == 'true' ]]; then
+            echo "Checked out branch ${TARGET_BRANCH}."
+            echo "Starting rebase of ${TARGET_BRANCH} onto origin/main."
+          fi
+          git rebase origin/main || (git rebase --abort && exit 1)
+          if [[ "$VERBOSE" == 'true' ]]; then
+            echo "Rebase completed successfully."
+          fi
+
+      - name: Push develop branch
+        shell: bash
+        run: |
+          git push --force-with-lease origin ${TARGET_BRANCH}
+          if [[ "$VERBOSE" == 'true' ]]; then
+            echo "Pushed branch ${TARGET_BRANCH} to remote (force-with-lease)."
+          fi

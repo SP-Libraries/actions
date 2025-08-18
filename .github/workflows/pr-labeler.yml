@@ -1,0 +1,37 @@
+name: PR Labeler
+
+on:
+  workflow_call:
+    inputs:
+      VERBOSE:
+        type: boolean
+        default: false
+        required: false
+        description: 'Enable verbose output'
+    secrets:
+      GH_TOKEN:
+        required: true
+        description: 'GitHub token for authentication'
+
+jobs:
+  pr-labeler:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Show Inputs
+        if: ${{ inputs.VERBOSE }}
+        shell: bash
+        run: |
+          echo "VERBOSE: ${{ inputs.VERBOSE }}"
+          echo "GH_TOKEN is set: ${{ secrets.GH_TOKEN != '' }}"
+
+      - name: Setup Environment
+        uses: SP-libraries/actions/.github/actions/setup-environment@main
+        with:
+          FETCH_DEPTH: 0
+          VERBOSE: ${{ inputs.VERBOSE }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+
+      - name: Labeler
+        uses: actions/labeler@v5
+        with:
+          sync-labels: true

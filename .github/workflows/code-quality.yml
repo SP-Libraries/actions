@@ -1,0 +1,95 @@
+name: Code Quality
+
+on:
+  workflow_call:
+    inputs:
+      VERBOSE:
+        type: boolean
+        default: false
+        required: false
+        description: 'Enable verbose output'
+    secrets:
+      GH_TOKEN:
+        required: true
+        description: 'GitHub token for authentication'
+
+jobs:
+  detect-languages:
+    runs-on: ubuntu-latest
+    outputs:
+      has_php: ${{ steps.detect.outputs.has_php }}
+      has_node: ${{ steps.detect.outputs.has_node }}
+      has_both: ${{ steps.detect.outputs.has_both }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Detect languages
+        id: detect
+        shell: bash
+        run: |
+          has_php=false
+          has_node=false
+          has_both=false
+
+          if [ -f "composer.json" ]; then
+            has_php=true
+          fi
+          if [ -f "package.json" ]; then
+            has_node=true
+          fi
+          if [ "$has_php" = true ] && [ "$has_node" = true ]; then
+            has_both=true
+          fi
+
+          echo "has_php=$has_php"   >> $GITHUB_OUTPUT
+          echo "has_node=$has_node" >> $GITHUB_OUTPUT
+          echo "has_both=$has_both" >> $GITHUB_OUTPUT
+
+          echo "Detected → PHP: $has_php | Node: $has_node | Both: $has_both"
+
+  code-quality-node-only:
+    needs: detect-languages
+    if: needs.detect-languages.outputs.has_node == 'true' && needs.detect-languages.outputs.has_both == 'false'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: [20, 21]
+
+    steps:
+      - name: Setup Environment
+        uses: SP-Libraries/actions/.github/actions/setup-environment@main
+        with:
+          FETCH_DEPTH: 0
+          SETUP_NODE: true
+          INSTALL_DEPENDENCIES: true
+          INSTALL_DEV_DEPENDENCIES: true
+          NODE_VERSION: ${{ matrix.node }}
+          VERBOSE: ${{ inputs.VERBOSE }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+      - name: Run LintRC
+        run: npx @sp-packages/lintrc ${{ inputs.VERBOSE && '--verbose' || '' }}
+
+  code-quality-php-and-node:
+    needs: detect-languages
+    if: needs.detect-languages.outputs.has_both == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        php: [8.2, 8.3]
+        node: [20, 21]
+
+    steps:
+      - name: Setup Environment
+        uses: SP-Libraries/actions/.github/actions/setup-environment@main
+        with:
+          FETCH_DEPTH: 0
+          SETUP_PHP: true
+          SETUP_NODE: true
+          INSTALL_DEPENDENCIES: true
+          INSTALL_DEV_DEPENDENCIES: true
+          PHP_VERSION: ${{ matrix.php }}
+          NODE_VERSION: ${{ matrix.node }}
+          VERBOSE: ${{ inputs.VERBOSE }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+      - name: Run LintRC
+        run: npx @sp-packages/lintrc ${{ inputs.VERBOSE && '--verbose' || '' }}
