@@ -1,3 +1,13 @@
+## [0.3.0](https://github.com/SP-Libraries/actions/compare/v0.2.1...v0.3.0) (2025-08-18)
+
+### Features
+
+* **action:** add upload release asset step to workflow ([f32353e](https://github.com/SP-Libraries/actions/commit/f32353ea16e5a72fc431aaca67420b190272c184))
+
+### Bug Fixes
+
+* **dependencies:** update dependencies ([783eecb](https://github.com/SP-Libraries/actions/commit/783eecb58f724cfdb0e8d6d783ae3b6012a39a07))
+
 ## [0.2.1](https://github.com/SP-Libraries/actions/compare/v0.2.0...v0.2.1) (2025-08-18)
 
 ### Bug Fixes
