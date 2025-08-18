@@ -86,7 +86,7 @@ runs:
         token: ${{ inputs.GH_TOKEN }}
         fetch-depth: ${{ inputs.FETCH_DEPTH }}
 
-    - name: Detect Languages and Check Project Files
+    - name: Detect Languages
       id: detect-languages
       shell: bash
       run: |
@@ -108,15 +108,21 @@ runs:
           php_version="${{ inputs.PHP_VERSION }}"
         else
           echo "composer-json-exists=false" >> $GITHUB_OUTPUT
-          echo "❌ composer.json not found"
+          if [[ "${{ inputs.VERBOSE }}" == "true" ]]; then
+            echo "❌ composer.json not found"
+          fi
         fi
 
         if [[ -f "composer.lock" ]]; then
           echo "composer-lock-exists=true" >> $GITHUB_OUTPUT
-          echo "✅ composer.lock found"
+          if [[ "${{ inputs.VERBOSE }}" == "true" ]]; then
+            echo "✅ composer.lock found"
+          fi
         else
           echo "composer-lock-exists=false" >> $GITHUB_OUTPUT
-          echo "❌ composer.lock not found"
+          if [[ "${{ inputs.VERBOSE }}" == "true" ]]; then
+            echo "❌ composer.lock not found"
+          fi
         fi
 
         # Check for Node.js files
@@ -128,28 +134,21 @@ runs:
           node_version="${{ inputs.NODE_VERSION }}"
         else
           echo "package-json-exists=false" >> $GITHUB_OUTPUT
-          echo "❌ package.json not found"
+          if [[ "${{ inputs.VERBOSE }}" == "true" ]]; then
+            echo "❌ package.json not found"
+          fi
         fi
 
         if [[ -f "package-lock.json" ]]; then
           echo "package-lock-exists=true" >> $GITHUB_OUTPUT
-          echo "✅ package-lock.json found"
-        else
-          echo "package-lock-exists=false" >> $GITHUB_OUTPUT
-          echo "❌ package-lock.json not found"
-        fi
-
-        # Check if build script exists in package.json (only if package.json exists)
-        if [[ -f "package.json" ]]; then
-          if jq -e '.scripts.build' package.json > /dev/null 2>&1; then
-            echo "build-script-exists=true" >> $GITHUB_OUTPUT
-            echo "✅ Build script found in package.json"
-          else
-            echo "build-script-exists=false" >> $GITHUB_OUTPUT
-            echo "❌ No build script found in package.json"
+          if [[ "${{ inputs.VERBOSE }}" == "true" ]]; then
+            echo "✅ package-lock.json found"
           fi
         else
-          echo "build-script-exists=false" >> $GITHUB_OUTPUT
+          echo "package-lock-exists=false" >> $GITHUB_OUTPUT
+          if [[ "${{ inputs.VERBOSE }}" == "true" ]]; then
+            echo "❌ package-lock.json not found"
+          fi
         fi
 
         # Set combined flags
@@ -171,14 +170,6 @@ runs:
         echo "PHP detected: $has_php (version: $php_version)"
         echo "Node.js detected: $has_node (version: $node_version)"
         echo "Both languages: $has_both"
-
-    - name: Validate Build Configuration
-      shell: bash
-      run: |
-        # Validate build configuration
-        if [[ "${{ inputs.RUN_BUILD }}" == "true" && "${{ steps.detect-languages.outputs.build-script-exists }}" == "false" ]]; then
-          echo "::warning::Build requested but no build script found in package.json"
-        fi
 
     - name: Setup PHP
       if: ${{ steps.detect-languages.outputs.setup_php == 'true' }}
@@ -249,9 +240,23 @@ runs:
         fi
 
     - name: Run Build Step
-      if: ${{ inputs.RUN_BUILD == 'true' && inputs.INSTALL_DEPENDENCIES == 'true' && steps.detect-languages.outputs.build-script-exists == 'true' }}
+      if: ${{ inputs.RUN_BUILD == 'true' && inputs.INSTALL_DEPENDENCIES == 'true' }}
       shell: bash
-      run: npm run build
+      run: |
+        # Check if build is possible
+        if [[ ! -f "package.json" ]]; then
+          echo "::error::Build requested but no package.json found"
+          exit 1
+        fi
+
+        # Check if build script exists
+        if ! jq -e '.scripts.build' package.json > /dev/null 2>&1; then
+          echo "::error::Build requested but no build script found in package.json"
+          exit 1
+        fi
+
+        echo "✅ Build script found, running build..."
+        npm run build
 
     - name: Show Environment Info
       if: ${{ inputs.VERBOSE == 'true' }}
@@ -271,7 +276,6 @@ runs:
         echo "composer.lock exists: ${{ steps.detect-languages.outputs.composer-lock-exists }}"
         echo "package.json exists: ${{ steps.detect-languages.outputs.package-json-exists }}"
         echo "package-lock.json exists: ${{ steps.detect-languages.outputs.package-lock-exists }}"
-        echo "build script exists: ${{ steps.detect-languages.outputs.build-script-exists }}"
 
         echo "--- Tool Versions ---"
         if [[ "${{ steps.detect-languages.outputs.setup_php }}" == "true" ]]; then
