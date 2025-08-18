@@ -167,8 +167,18 @@ runs:
 
         # Show detection summary
         echo "=== Language Detection Summary ==="
-        echo "PHP detected: $has_php (version: $php_version)"
-        echo "Node.js detected: $has_node (version: $node_version)"
+        echo -n "PHP detected: $has_php"
+        if [[ -n "$php_version" ]]; then
+          echo " (version: $php_version)"
+        else
+          echo
+        fi
+        echo -n "Node.js detected: $has_node"
+        if [[ -n "$node_version" ]]; then
+          echo " (version: $node_version)"
+        else
+          echo
+        fi
         echo "Both languages: $has_both"
 
     - name: Setup PHP
