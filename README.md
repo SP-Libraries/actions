@@ -23,9 +23,7 @@ Sets up Git, PHP, Node.js, and dependency caching for workflows.
 | -------------------------- | ------- | ------- | -------- | ------------------------------------- |
 | `VERBOSE`                  | boolean | false   | No       | Print debug information               |
 | `FETCH_DEPTH`              | number  | 1       | No       | Git fetch depth (0 = full history)    |
-| `SETUP_PHP`                | boolean | false   | No       | Install PHP + Composer                |
 | `PHP_VERSION`              | string  | 8.3     | No       | PHP version                           |
-| `SETUP_NODE`               | boolean | false   | No       | Install Node.js                       |
 | `NODE_VERSION`             | string  | 21      | No       | Node.js version                       |
 | `CACHE_KEY_PREFIX`         | string  | deps    | No       | Cache key prefix                      |
 | `INSTALL_DEPENDENCIES`     | boolean | false   | No       | Run dependency installation           |

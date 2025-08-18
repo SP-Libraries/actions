@@ -24,12 +24,10 @@ jobs:
           echo "VERBOSE: ${{ inputs.VERBOSE }}"
           echo "GH_TOKEN is set: ${{ secrets.GH_TOKEN != '' }}"
 
-      - name: Setup Environment
-        uses: SP-libraries/actions/.github/actions/setup-environment@main
+      - name: Checkout Code
+        uses: actions/checkout@v4
         with:
-          FETCH_DEPTH: 0
-          VERBOSE: ${{ inputs.VERBOSE }}
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          fetch-depth: 0
 
       - name: Labeler
         uses: actions/labeler@v5

@@ -35,12 +35,10 @@ jobs:
             echo "Configured git user as github-actions"
           fi
 
-      - name: Setup Environment
-        uses: SP-libraries/actions/.github/actions/setup-environment@main
+      - name: Checkout Code
+        uses: actions/checkout@v4
         with:
-          FETCH_DEPTH: 0
-          VERBOSE: ${{ inputs.VERBOSE }}
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          fetch-depth: 0
 
       - name: Ensure develop branch exists
         shell: bash

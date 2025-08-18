@@ -44,8 +44,6 @@ jobs:
         with:
           FETCH_DEPTH: 0
           RUN_BUILD: true
-          SETUP_PHP: true
-          SETUP_NODE: true
           INSTALL_DEPENDENCIES: true
           INSTALL_DEV_DEPENDENCIES: true
           VERBOSE: ${{ inputs.VERBOSE }}
