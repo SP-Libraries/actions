@@ -1,3 +1,14 @@
+## [0.2.0](https://github.com/SP-Libraries/actions/compare/v0.1.1...v0.2.0) (2025-08-18)
+
+### Features
+
+* **workflows:** improve language detection and output handling ([5192aec](https://github.com/SP-Libraries/actions/commit/5192aecb33bb993cebd0b14a246a5c39932b9f29))
+* **workflows:** streamline PHP and Node.js setup inputs and outputs ([fa1c5df](https://github.com/SP-Libraries/actions/commit/fa1c5df1b438489d9f6f44106e967af7abc9602a))
+
+### Bug Fixes
+
+* **dependencies:** update dependencies ([4dcae78](https://github.com/SP-Libraries/actions/commit/4dcae789ba13a90fd961f9bbe3ac588fff28fa7c))
+
 ## [0.1.1](https://github.com/SP-Libraries/actions/compare/v0.1.0...v0.1.1) (2025-08-18)
 
 ### Bug Fixes
