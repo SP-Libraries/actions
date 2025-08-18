@@ -1,3 +1,11 @@
+## [0.2.1](https://github.com/SP-Libraries/actions/compare/v0.2.0...v0.2.1) (2025-08-18)
+
+### Bug Fixes
+
+* **action:** improve language detection summary output formatting ([d3ddfc6](https://github.com/SP-Libraries/actions/commit/d3ddfc63cd823ab3e161d38221f71a05af947685))
+* **workflows:** add missing token parameter to checkout step ([f9a3ccd](https://github.com/SP-Libraries/actions/commit/f9a3ccdb4884e733c483b78bc0fdf35291a0d6a1))
+* **workflows:** add verbose output for input parameters and steps ([f3762f5](https://github.com/SP-Libraries/actions/commit/f3762f53eabd890626c3bb595c98dbd685799a0e))
+
 ## [0.2.0](https://github.com/SP-Libraries/actions/compare/v0.1.1...v0.2.0) (2025-08-18)
 
 ### Features
