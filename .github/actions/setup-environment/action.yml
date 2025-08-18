@@ -11,26 +11,16 @@ inputs:
     type: number
     default: 1
     description: 'Git fetch depth (0 for all history)'
-  SETUP_PHP:
-    type: boolean
-    default: false
-    required: false
-    description: 'Set to true to include PHP setup'
   PHP_VERSION:
     type: string
     default: '8.3'
     required: false
-    description: 'PHP version to install'
-  SETUP_NODE:
-    type: boolean
-    default: false
-    required: false
-    description: 'Set to true to include Node.js setup'
+    description: 'PHP version to install (only used if composer.json exists)'
   NODE_VERSION:
     type: string
     default: '21'
     required: false
-    description: 'Node.js version to install'
+    description: 'Node.js version to install (only used if package.json exists)'
   CACHE_KEY_PREFIX:
     type: string
     default: 'deps'
@@ -57,6 +47,23 @@ inputs:
     required: false
     description: 'GitHub token for authentication'
 
+outputs:
+  has_php:
+    description: 'Whether PHP environment was detected and set up'
+    value: ${{ steps.detect-languages.outputs.has_php }}
+  has_node:
+    description: 'Whether Node.js environment was detected and set up'
+    value: ${{ steps.detect-languages.outputs.has_node }}
+  has_both:
+    description: 'Whether both PHP and Node.js environments were detected'
+    value: ${{ steps.detect-languages.outputs.has_both }}
+  php_version:
+    description: 'PHP version that was set up'
+    value: ${{ steps.detect-languages.outputs.php_version }}
+  node_version:
+    description: 'Node.js version that was set up'
+    value: ${{ steps.detect-languages.outputs.node_version }}
+
 runs:
   using: 'composite'
   steps:
@@ -65,9 +72,8 @@ runs:
       shell: bash
       run: |
         echo "VERBOSE: ${{ inputs.VERBOSE }}"
-        echo "SETUP_PHP: ${{ inputs.SETUP_PHP }}"
+        echo "FETCH_DEPTH: ${{ inputs.FETCH_DEPTH }}"
         echo "PHP_VERSION: ${{ inputs.PHP_VERSION }}"
-        echo "SETUP_NODE: ${{ inputs.SETUP_NODE }}"
         echo "NODE_VERSION: ${{ inputs.NODE_VERSION }}"
         echo "CACHE_KEY_PREFIX: ${{ inputs.CACHE_KEY_PREFIX }}"
         echo "INSTALL_DEPENDENCIES: ${{ inputs.INSTALL_DEPENDENCIES }}"
@@ -80,14 +86,26 @@ runs:
         token: ${{ inputs.GH_TOKEN }}
         fetch-depth: ${{ inputs.FETCH_DEPTH }}
 
-    - name: Check Project Files
-      id: check-files
+    - name: Detect Languages and Check Project Files
+      id: detect-languages
       shell: bash
       run: |
-        # Check for necessary files
+        # Initialize variables
+        has_php=false
+        has_node=false
+        has_both=false
+        setup_php=false
+        setup_node=false
+        php_version=""
+        node_version=""
+
+        # Check for PHP files
         if [[ -f "composer.json" ]]; then
           echo "composer-json-exists=true" >> $GITHUB_OUTPUT
           echo "✅ composer.json found"
+          has_php=true
+          setup_php=true
+          php_version="${{ inputs.PHP_VERSION }}"
         else
           echo "composer-json-exists=false" >> $GITHUB_OUTPUT
           echo "❌ composer.json not found"
@@ -105,6 +123,9 @@ runs:
         if [[ -f "package.json" ]]; then
           echo "package-json-exists=true" >> $GITHUB_OUTPUT
           echo "✅ package.json found"
+          has_node=true
+          setup_node=true
+          node_version="${{ inputs.NODE_VERSION }}"
         else
           echo "package-json-exists=false" >> $GITHUB_OUTPUT
           echo "❌ package.json not found"
@@ -131,33 +152,43 @@ runs:
           echo "build-script-exists=false" >> $GITHUB_OUTPUT
         fi
 
-    - name: Validate Project Configuration
+        # Set combined flags
+        if [[ "$has_php" == "true" && "$has_node" == "true" ]]; then
+          has_both=true
+        fi
+
+        # Output detection results
+        echo "has_php=$has_php" >> $GITHUB_OUTPUT
+        echo "has_node=$has_node" >> $GITHUB_OUTPUT
+        echo "has_both=$has_both" >> $GITHUB_OUTPUT
+        echo "setup_php=$setup_php" >> $GITHUB_OUTPUT
+        echo "setup_node=$setup_node" >> $GITHUB_OUTPUT
+        echo "php_version=$php_version" >> $GITHUB_OUTPUT
+        echo "node_version=$node_version" >> $GITHUB_OUTPUT
+
+        # Show detection summary
+        echo "=== Language Detection Summary ==="
+        echo "PHP detected: $has_php (version: $php_version)"
+        echo "Node.js detected: $has_node (version: $node_version)"
+        echo "Both languages: $has_both"
+
+    - name: Validate Build Configuration
       shell: bash
       run: |
-        # Validate configuration
-        if [[ "${{ inputs.SETUP_PHP }}" == "true" && "${{ steps.check-files.outputs.composer-json-exists }}" == "false" ]]; then
-          echo "::warning::PHP setup requested but composer.json not found"
-        fi
-
-        # Validate Node.js configuration
-        if [[ "${{ inputs.SETUP_NODE }}" == "true" && "${{ steps.check-files.outputs.package-json-exists }}" == "false" ]]; then
-          echo "::warning::Node.js setup requested but package.json not found"
-        fi
-
         # Validate build configuration
-        if [[ "${{ inputs.RUN_BUILD }}" == "true" && "${{ steps.check-files.outputs.build-script-exists }}" == "false" ]]; then
+        if [[ "${{ inputs.RUN_BUILD }}" == "true" && "${{ steps.detect-languages.outputs.build-script-exists }}" == "false" ]]; then
           echo "::warning::Build requested but no build script found in package.json"
         fi
 
     - name: Setup PHP
-      if: ${{ inputs.SETUP_PHP == 'true' }}
+      if: ${{ steps.detect-languages.outputs.setup_php == 'true' }}
       uses: shivammathur/setup-php@v2
       with:
         php-version: ${{ inputs.PHP_VERSION }}
         tools: composer
 
     - name: Setup Node.js
-      if: ${{ inputs.SETUP_NODE == 'true' }}
+      if: ${{ steps.detect-languages.outputs.setup_node == 'true' }}
       uses: actions/setup-node@v4
       with:
         node-version: ${{ inputs.NODE_VERSION }}
@@ -165,18 +196,18 @@ runs:
         cache-dependency-path: package-lock.json
 
     - name: Get Composer Cache Directory
-      if: ${{ inputs.SETUP_PHP == 'true' && steps.check-files.outputs.composer-json-exists == 'true' }}
+      if: ${{ steps.detect-languages.outputs.setup_php == 'true' && steps.detect-languages.outputs.composer-json-exists == 'true' }}
       id: composer-cache
       run: echo "dir=$(composer config cache-dir)" >> $GITHUB_OUTPUT
       shell: bash
 
     - name: Cache Dependencies
-      if: ${{ (inputs.SETUP_PHP == 'true' && steps.check-files.outputs.composer-json-exists == 'true') || (inputs.SETUP_NODE == 'true' && steps.check-files.outputs.package-json-exists == 'true') }}
+      if: ${{ steps.detect-languages.outputs.setup_php == 'true' || steps.detect-languages.outputs.setup_node == 'true' }}
       uses: actions/cache@v4
       with:
         path: |
-          ${{ inputs.SETUP_PHP == 'true' && steps.check-files.outputs.composer-json-exists == 'true' && steps.composer-cache.outputs.dir || '' }}
-          ${{ inputs.SETUP_NODE == 'true' && steps.check-files.outputs.package-json-exists == 'true' && '~/.npm' || '' }}
+          ${{ steps.detect-languages.outputs.setup_php == 'true' && steps.composer-cache.outputs.dir || '' }}
+          ${{ steps.detect-languages.outputs.setup_node == 'true' && '~/.npm' || '' }}
         key: ${{ inputs.CACHE_KEY_PREFIX }}-${{ runner.os }}-php${{ inputs.PHP_VERSION }}-node${{ inputs.NODE_VERSION }}-dev${{ inputs.INSTALL_DEV_DEPENDENCIES }}-${{ hashFiles('**/composer.lock', '**/package-lock.json') }}
         restore-keys: |
           ${{ inputs.CACHE_KEY_PREFIX }}-${{ runner.os }}-php${{ inputs.PHP_VERSION }}-node${{ inputs.NODE_VERSION }}-dev${{ inputs.INSTALL_DEV_DEPENDENCIES }}-
@@ -185,12 +216,12 @@ runs:
           ${{ inputs.CACHE_KEY_PREFIX }}-${{ runner.os }}-
 
     - name: Composer Validate
-      if: ${{ inputs.SETUP_PHP == 'true' && steps.check-files.outputs.composer-json-exists == 'true' && inputs.INSTALL_DEPENDENCIES == 'true' }}
+      if: ${{ steps.detect-languages.outputs.setup_php == 'true' && steps.detect-languages.outputs.composer-json-exists == 'true' && inputs.INSTALL_DEPENDENCIES == 'true' }}
       shell: bash
       run: composer validate --no-check-all --no-check-publish --no-interaction --strict
 
     - name: Install PHP Dependencies
-      if: ${{ inputs.SETUP_PHP == 'true' && steps.check-files.outputs.composer-json-exists == 'true' && inputs.INSTALL_DEPENDENCIES == 'true' }}
+      if: ${{ steps.detect-languages.outputs.setup_php == 'true' && steps.detect-languages.outputs.composer-json-exists == 'true' && inputs.INSTALL_DEPENDENCIES == 'true' }}
       shell: bash
       env:
         COMPOSER_AUTH: |
@@ -207,7 +238,7 @@ runs:
         fi
 
     - name: Install Node.js Dependencies
-      if: ${{ inputs.SETUP_NODE == 'true' && steps.check-files.outputs.package-json-exists == 'true' && inputs.INSTALL_DEPENDENCIES == 'true' }}
+      if: ${{ steps.detect-languages.outputs.setup_node == 'true' && steps.detect-languages.outputs.package-json-exists == 'true' && inputs.INSTALL_DEPENDENCIES == 'true' }}
       shell: bash
       run: |
         if [[ "${{ inputs.INSTALL_DEV_DEPENDENCIES }}" == "true" ]]; then
@@ -218,7 +249,7 @@ runs:
         fi
 
     - name: Run Build Step
-      if: ${{ inputs.RUN_BUILD == 'true' && inputs.INSTALL_DEPENDENCIES == 'true' && steps.check-files.outputs.build-script-exists == 'true' }}
+      if: ${{ inputs.RUN_BUILD == 'true' && inputs.INSTALL_DEPENDENCIES == 'true' && steps.detect-languages.outputs.build-script-exists == 'true' }}
       shell: bash
       run: npm run build
 
@@ -228,22 +259,29 @@ runs:
       run: |
         echo "=== Environment Information ==="
 
+        echo "--- Language Detection Results ---"
+        echo "PHP detected: ${{ steps.detect-languages.outputs.has_php }}"
+        echo "Node.js detected: ${{ steps.detect-languages.outputs.has_node }}"
+        echo "Both languages: ${{ steps.detect-languages.outputs.has_both }}"
+        echo "PHP version used: ${{ steps.detect-languages.outputs.php_version }}"
+        echo "Node.js version used: ${{ steps.detect-languages.outputs.node_version }}"
+
         echo "--- Project Files Status ---"
-        echo "composer.json exists: ${{ steps.check-files.outputs.composer-json-exists }}"
-        echo "composer.lock exists: ${{ steps.check-files.outputs.composer-lock-exists }}"
-        echo "package.json exists: ${{ steps.check-files.outputs.package-json-exists }}"
-        echo "package-lock.json exists: ${{ steps.check-files.outputs.package-lock-exists }}"
-        echo "build script exists: ${{ steps.check-files.outputs.build-script-exists }}"
+        echo "composer.json exists: ${{ steps.detect-languages.outputs.composer-json-exists }}"
+        echo "composer.lock exists: ${{ steps.detect-languages.outputs.composer-lock-exists }}"
+        echo "package.json exists: ${{ steps.detect-languages.outputs.package-json-exists }}"
+        echo "package-lock.json exists: ${{ steps.detect-languages.outputs.package-lock-exists }}"
+        echo "build script exists: ${{ steps.detect-languages.outputs.build-script-exists }}"
 
         echo "--- Tool Versions ---"
-        if [[ "${{ inputs.SETUP_PHP }}" == "true" ]]; then
+        if [[ "${{ steps.detect-languages.outputs.setup_php }}" == "true" ]]; then
           echo "PHP version:"
           php -v || echo "PHP not installed"
           echo "Composer version:"
           composer -V || echo "Composer not installed"
         fi
 
-        if [[ "${{ inputs.SETUP_NODE }}" == "true" ]]; then
+        if [[ "${{ steps.detect-languages.outputs.setup_node }}" == "true" ]]; then
           echo "Node.js version:"
           node -v || echo "Node.js not installed"
           echo "NPM version:"
@@ -253,6 +291,6 @@ runs:
         echo "--- Cache Information ---"
         echo "Cache key prefix: ${{ inputs.CACHE_KEY_PREFIX }}"
 
-        if [[ "${{ inputs.SETUP_PHP }}" == "true" && "${{ steps.check-files.outputs.composer-json-exists }}" == "true" ]]; then
+        if [[ "${{ steps.detect-languages.outputs.setup_php }}" == "true" && "${{ steps.detect-languages.outputs.composer-json-exists }}" == "true" ]]; then
           echo "Composer cache directory: ${{ steps.composer-cache.outputs.dir }}"
         fi
