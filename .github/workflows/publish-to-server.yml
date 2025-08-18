@@ -22,11 +22,13 @@ jobs:
         if: ${{ inputs.VERBOSE }}
         shell: bash
         run: |
+          # Show all input parameters
           echo "VERBOSE: ${{ inputs.VERBOSE }}"
           echo "WEBHOOK_URL is set: ${{ secrets.WEBHOOK_URL != '' }}"
 
       - name: Deploy to Server
         run: |
+          # Trigger the server deployment via webhook
           curl -X POST "$WEBHOOK_URL" -H "Content-Type: application/json" -d '{}'
         env:
           WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}

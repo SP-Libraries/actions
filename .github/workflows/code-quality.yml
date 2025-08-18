@@ -36,4 +36,6 @@ jobs:
 
       - name: Run LintRC
         if: ${{ steps.setup.outputs.has_node == 'true' }}
-        run: npx @sp-packages/lintrc ${{ inputs.VERBOSE && '--verbose' || '' }}
+        run: |
+          # Run the LintRC tool to check code quality
+          npx @sp-packages/lintrc ${{ inputs.VERBOSE && '--verbose' || '' }}

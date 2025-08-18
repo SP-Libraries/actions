@@ -23,12 +23,14 @@ jobs:
         if: ${{ inputs.VERBOSE }}
         shell: bash
         run: |
+          # Show all input parameters
           echo "VERBOSE: ${{ inputs.VERBOSE }}"
           echo "GH_TOKEN is set: ${{ secrets.GH_TOKEN != '' }}"
 
       - name: Setup Git user
         shell: bash
         run: |
+          # Configure git user for the action
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
           if [[ "$VERBOSE" == 'true' ]]; then
@@ -43,6 +45,7 @@ jobs:
       - name: Ensure develop branch exists
         shell: bash
         run: |
+          # Check if the target branch exists, if not create it from main
           if ! git show-ref --verify --quiet refs/heads/${TARGET_BRANCH}; then
             echo "No ${TARGET_BRANCH} branch found. Creating from main."
             git checkout -b ${TARGET_BRANCH} origin/main
@@ -59,6 +62,7 @@ jobs:
       - name: Fetch all branches
         shell: bash
         run: |
+          # Fetch all branches to ensure we have the latest state
           git fetch --all
           if [[ "$VERBOSE" == 'true' ]]; then
             echo "Fetched all branches from remote."
@@ -67,6 +71,7 @@ jobs:
       - name: Rebase develop onto main
         shell: bash
         run: |
+          # Checkout the target branch and rebase it onto main
           git checkout ${TARGET_BRANCH}
           if [[ "$VERBOSE" == 'true' ]]; then
             echo "Checked out branch ${TARGET_BRANCH}."
@@ -80,6 +85,7 @@ jobs:
       - name: Push develop branch
         shell: bash
         run: |
+          # Push the rebased branch back to the remote repository
           git push --force-with-lease origin ${TARGET_BRANCH}
           if [[ "$VERBOSE" == 'true' ]]; then
             echo "Pushed branch ${TARGET_BRANCH} to remote (force-with-lease)."

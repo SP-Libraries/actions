@@ -21,6 +21,7 @@ jobs:
         if: ${{ inputs.VERBOSE }}
         shell: bash
         run: |
+          # Show all input parameters
           echo "VERBOSE: ${{ inputs.VERBOSE }}"
           echo "GH_TOKEN is set: ${{ secrets.GH_TOKEN != '' }}"
 

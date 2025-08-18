@@ -71,6 +71,7 @@ runs:
       if: ${{ inputs.VERBOSE == 'true' }}
       shell: bash
       run: |
+        # Show all input parameters
         echo "VERBOSE: ${{ inputs.VERBOSE }}"
         echo "FETCH_DEPTH: ${{ inputs.FETCH_DEPTH }}"
         echo "PHP_VERSION: ${{ inputs.PHP_VERSION }}"
@@ -199,7 +200,9 @@ runs:
     - name: Get Composer Cache Directory
       if: ${{ steps.detect-languages.outputs.setup_php == 'true' && steps.detect-languages.outputs.composer-json-exists == 'true' }}
       id: composer-cache
-      run: echo "dir=$(composer config cache-dir)" >> $GITHUB_OUTPUT
+      run: |
+        # Get the Composer cache directory
+        echo "dir=$(composer config cache-dir)" >> $GITHUB_OUTPUT
       shell: bash
 
     - name: Cache Dependencies
@@ -219,7 +222,9 @@ runs:
     - name: Composer Validate
       if: ${{ steps.detect-languages.outputs.setup_php == 'true' && steps.detect-languages.outputs.composer-json-exists == 'true' && inputs.INSTALL_DEPENDENCIES == 'true' }}
       shell: bash
-      run: composer validate --no-check-all --no-check-publish --no-interaction --strict
+      run: |
+        # Validate composer.json
+        composer validate --no-check-all --no-check-publish --no-interaction --strict
 
     - name: Install PHP Dependencies
       if: ${{ steps.detect-languages.outputs.setup_php == 'true' && steps.detect-languages.outputs.composer-json-exists == 'true' && inputs.INSTALL_DEPENDENCIES == 'true' }}
@@ -232,6 +237,7 @@ runs:
             }
           }
       run: |
+        # Install PHP dependencies
         if [[ "${{ inputs.INSTALL_DEV_DEPENDENCIES }}" == "true" ]]; then
           composer install --no-interaction --no-scripts
         else
@@ -242,6 +248,7 @@ runs:
       if: ${{ steps.detect-languages.outputs.setup_node == 'true' && steps.detect-languages.outputs.package-json-exists == 'true' && inputs.INSTALL_DEPENDENCIES == 'true' }}
       shell: bash
       run: |
+        # Install Node.js dependencies
         if [[ "${{ inputs.INSTALL_DEV_DEPENDENCIES }}" == "true" ]]; then
           npm ci
         else
@@ -272,6 +279,7 @@ runs:
       if: ${{ inputs.VERBOSE == 'true' }}
       shell: bash
       run: |
+        # Show environment information
         echo "=== Environment Information ==="
 
         echo "--- Language Detection Results ---"

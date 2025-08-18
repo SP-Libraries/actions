@@ -33,6 +33,7 @@ jobs:
         if: ${{ inputs.VERBOSE }}
         shell: bash
         run: |
+          # Show all input parameters
           echo "VERBOSE: ${{ inputs.VERBOSE }}"
           echo "DRY_RUN: ${{ inputs.DRY_RUN }}"
           echo "GH_TOKEN is set: ${{ secrets.GH_TOKEN != '' }}"
