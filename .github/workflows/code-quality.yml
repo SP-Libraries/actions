@@ -47,7 +47,7 @@ jobs:
 
           echo "Detected → PHP: $has_php | Node: $has_node | Both: $has_both"
 
-  code-quality-node-only:
+  node-quality:
     needs: detect-languages
     if: needs.detect-languages.outputs.has_node == 'true' && needs.detect-languages.outputs.has_both == 'false'
     runs-on: ubuntu-latest
@@ -69,7 +69,7 @@ jobs:
       - name: Run LintRC
         run: npx @sp-packages/lintrc ${{ inputs.VERBOSE && '--verbose' || '' }}
 
-  code-quality-php-and-node:
+  php-with-node-quality:
     needs: detect-languages
     if: needs.detect-languages.outputs.has_both == 'true'
     runs-on: ubuntu-latest
