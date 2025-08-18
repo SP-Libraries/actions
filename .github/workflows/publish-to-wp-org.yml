@@ -1,0 +1,62 @@
+name: Publish to WordPress.org
+
+on:
+  workflow_call:
+    inputs:
+      VERBOSE:
+        type: boolean
+        default: false
+        required: false
+        description: 'Set to true to enable verbose output'
+      DRY_RUN:
+        type: boolean
+        default: false
+        required: false
+        description: 'Set to true to perform a dry run without actual deployment'
+    secrets:
+      GH_TOKEN:
+        required: true
+        description: 'GitHub token for authentication'
+      SVN_USERNAME:
+        required: true
+        description: 'WordPress.org SVN username'
+      SVN_PASSWORD:
+        required: true
+        description: 'WordPress.org SVN password'
+
+jobs:
+  publish-to-wp-org:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Show Inputs
+        if: ${{ inputs.VERBOSE }}
+        shell: bash
+        run: |
+          echo "VERBOSE: ${{ inputs.VERBOSE }}"
+          echo "DRY_RUN: ${{ inputs.DRY_RUN }}"
+          echo "GH_TOKEN is set: ${{ secrets.GH_TOKEN != '' }}"
+          echo "WP_ORG_SVN_USERNAME is set: ${{ secrets.WP_ORG_SVN_USERNAME != '' }}"
+          echo "WP_ORG_SVN_PASSWORD is set: ${{ secrets.WP_ORG_SVN_PASSWORD != '' }}"
+
+      - name: Setup Environment
+        uses: SP-libraries/actions/.github/actions/setup-environment@main
+        with:
+          FETCH_DEPTH: 0
+          RUN_BUILD: true
+          SETUP_PHP: true
+          SETUP_NODE: true
+          INSTALL_DEPENDENCIES: true
+          INSTALL_DEV_DEPENDENCIES: true
+          VERBOSE: ${{ inputs.VERBOSE }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+
+      - name: Deploy to WordPress.org
+        uses: 10up/action-wordpress-plugin-deploy@stable
+        env:
+          BUILD_DIR: build
+          SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
+          SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
+        with:
+          generate-zip: true
+          dry-run: ${{ inputs.DRY_RUN }}

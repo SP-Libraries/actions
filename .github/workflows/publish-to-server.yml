@@ -1,0 +1,32 @@
+name: Publish to Server
+
+on:
+  workflow_call:
+    inputs:
+      VERBOSE:
+        type: boolean
+        default: false
+        required: false
+        description: 'Set to true to enable verbose output'
+    secrets:
+      WEBHOOK_URL:
+        required: true
+        description: 'Webhook URL for the server deployment'
+
+jobs:
+  publish-to-server:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Show Inputs
+        if: ${{ inputs.VERBOSE }}
+        shell: bash
+        run: |
+          echo "VERBOSE: ${{ inputs.VERBOSE }}"
+          echo "WEBHOOK_URL is set: ${{ secrets.WEBHOOK_URL != '' }}"
+
+      - name: Deploy to Server
+        run: |
+          curl -X POST "$WEBHOOK_URL" -H "Content-Type: application/json" -d '{}'
+        env:
+          WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
