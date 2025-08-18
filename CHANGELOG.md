@@ -1,3 +1,10 @@
+## [0.1.1](https://github.com/SP-Libraries/actions/compare/v0.1.0...v0.1.1) (2025-08-18)
+
+### Bug Fixes
+
+* **workflows:** remove unnecessary PHP setup from semantic release ([cb2df6c](https://github.com/SP-Libraries/actions/commit/cb2df6c89f561fae97d44f136dbe001f3402a5b7))
+* **workflows:** rename code quality jobs for clarity and consistency ([5be9baf](https://github.com/SP-Libraries/actions/commit/5be9bafebab2689999531d5011c2ed136ea9241a))
+
 ## [0.1.0](https://github.com/SP-Libraries/actions/compare/v0.0.0...v0.1.0) (2025-08-18)
 
 ### Features
