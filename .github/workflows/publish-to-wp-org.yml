@@ -59,3 +59,10 @@ jobs:
         with:
           generate-zip: true
           dry-run: ${{ inputs.DRY_RUN }}
+
+      - name: Upload Release Asset
+        uses: softprops/action-gh-release@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        with:
+          files: ${{ github.workspace }}/${{ github.event.repository.name }}.zip
