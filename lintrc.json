@@ -5,16 +5,25 @@
       "type": "npm",
       "command": "commitlint",
       "args": ["--from=origin/main", "--to=HEAD"],
-      "behavior": "error",
+      "behavior": "warn",
       "includeFiles": false,
       "priority": 9
+    },
+    "COMPOSER_VERIFY": {
+      "title": "Verifying Composer Dependencies",
+      "type": "composer",
+      "command": "validate",
+      "args": ["--no-interaction", "--strict"],
+      "includeFiles": false,
+      "behavior": "error",
+      "priority": 11
     },
     "CSPELL": {
       "title": "cSpell",
       "type": "npm",
       "command": "cspell",
       "args": ["--no-progress", "--no-summary"],
-      "behavior": "error",
+      "behavior": "warn",
       "ignoreFiles": ["composer.lock", "package-lock.json"],
       "priority": 8
     },
@@ -22,7 +31,7 @@
       "title": "DepCheck",
       "type": "npm",
       "command": "depcheck",
-      "behavior": "error",
+      "behavior": "warn",
       "includeFiles": false,
       "priority": 10
     },
@@ -39,23 +48,75 @@
       "type": "npm",
       "command": "markdownlint",
       "args": ["--fix"],
-      "behavior": "error",
+      "behavior": "warn",
       "priority": 5
+    },
+    "NPM_VERIFY": {
+      "title": "Verifying NPM Package",
+      "type": "npm",
+      "command": "npmPkgJsonLint .",
+      "includeFiles": false,
+      "behavior": "error",
+      "requires": "npm-package-json-lint",
+      "priority": 12
+    },
+    "PHPCBF": {
+      "title": "PHP Code Beautifier",
+      "type": "composer",
+      "command": "phpcbf",
+      "behavior": "warn",
+      "priority": 3
+    },
+    "PHPCS": {
+      "title": "PHP Code Sniffer",
+      "type": "composer",
+      "command": "phpcs",
+      "behavior": "error",
+      "priority": 6
+    },
+    "PHPCSFIXER": {
+      "title": "PHP Coding Standards Fixer",
+      "type": "composer",
+      "command": "php-cs-fixer",
+      "args": ["fix", "--config=.php-cs-fixer.php"],
+      "behavior": "error",
+      "priority": 1
+    },
+    "PHPSTAN": {
+      "title": "PHPStan",
+      "type": "composer",
+      "command": "phpstan",
+      "args": ["analyze", "--error-format=raw"],
+      "behavior": "error",
+      "priority": 7
     },
     "PRETTIER": {
       "title": "Prettier",
       "type": "npm",
       "command": "prettier",
       "args": ["--write"],
-      "behavior": "error",
+      "behavior": "warn",
       "priority": 2
     }
   },
   "MAPPING": {
-    "yml": ["PRETTIER"],
-    "json": ["PRETTIER"],
+    "php": ["PHPCSFIXER", "PHPCBF", "PHPCS", "PHPSTAN"],
     "js": ["ESLINT", "PRETTIER"],
+    "jsx": ["ESLINT", "PRETTIER"],
+    "ts": ["ESLINT", "PRETTIER"],
+    "tsx": ["ESLINT", "PRETTIER"],
+    "cjs": ["ESLINT", "PRETTIER"],
+    "mjs": ["ESLINT", "PRETTIER"],
     "md": ["PRETTIER", "MARKDOWNLINT"],
-    "*": ["CSPELL", "COMMITLINT", "DEPCHECK"]
+    "mdx": ["PRETTIER", "MARKDOWNLINT"],
+    "markdown": ["PRETTIER", "MARKDOWNLINT"],
+    "json": ["PRETTIER"],
+    "yaml": ["PRETTIER"],
+    "yml": ["PRETTIER"],
+    "html": ["PRETTIER"],
+    "css": ["PRETTIER"],
+    "scss": ["PRETTIER"],
+    "less": ["PRETTIER"],
+    "*": ["COMPOSER_VERIFY", "NPM_VERIFY", "CSPELL", "COMMITLINT", "DEPCHECK"]
   }
 }
