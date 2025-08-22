@@ -13,7 +13,7 @@ on:
         default: false
         required: false
         description: 'Run in dry-run mode'
-      BUILD:
+      RUN_BUILD:
         type: boolean
         default: false
         required: false
@@ -38,13 +38,14 @@ jobs:
           # Show all input parameters
           echo "VERBOSE: ${{ inputs.VERBOSE }}"
           echo "DRY_RUN: ${{ inputs.DRY_RUN }}"
-          echo "BUILD: ${{ inputs.BUILD }}"
+          echo "RUN_BUILD: ${{ inputs.RUN_BUILD }}"
           echo "GH_TOKEN is set: ${{ secrets.GH_TOKEN != '' }}"
 
       - name: Setup Environment
         uses: SP-libraries/actions/.github/actions/setup-environment@main
         with:
           FETCH_DEPTH: 0
+          RUN_BUILD: ${{ inputs.RUN_BUILD }}
           INSTALL_DEPENDENCIES: true
           INSTALL_DEV_DEPENDENCIES: true
           VERBOSE: ${{ inputs.VERBOSE }}

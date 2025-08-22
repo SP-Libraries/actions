@@ -70,7 +70,7 @@ Handles automated versioning and package publishing.
 - Inputs:
   - `VERBOSE` (boolean, default: false)
   - `DRY_RUN` (boolean, default: false)
-  - `BUILD` (boolean, default: false)
+  - `RUN_BUILD` (boolean, default: false)
 - Secrets:
   - `GH_TOKEN` (required)
   - `NPM_TOKEN` (optional)
