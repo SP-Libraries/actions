@@ -1,3 +1,10 @@
+## [0.4.1](https://github.com/SP-Libraries/actions/compare/v0.4.0...v0.4.1) (2025-08-22)
+
+### Bug Fixes
+
+* **lintrc:** enforce strict mode for LintRC tool ([9e78fde](https://github.com/SP-Libraries/actions/commit/9e78fde479d23a6d3e00e85d5dde7bb13ea6f892))
+* **semantic-release:** rename BUILD input to RUN_BUILD for clarity ([eade18e](https://github.com/SP-Libraries/actions/commit/eade18ea965303367b9b2da673582fbbf2d1c3cd))
+
 ## [0.4.0](https://github.com/SP-Libraries/actions/compare/v0.3.1...v0.4.0) (2025-08-22)
 
 ### Features
