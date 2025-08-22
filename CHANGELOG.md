@@ -1,3 +1,16 @@
+## [0.4.0](https://github.com/SP-Libraries/actions/compare/v0.3.1...v0.4.0) (2025-08-22)
+
+### Features
+
+* **tools:** update configuration files ([c042649](https://github.com/SP-Libraries/actions/commit/c042649826966dcfa303a215450dfe0bf33aba7c))
+
+### Bug Fixes
+
+* **action:** simplify composer validation command in setup ([9a3e382](https://github.com/SP-Libraries/actions/commit/9a3e382ba867c0baee06e867373717495f193cae))
+* **dependencies:** update dependencies ([a78ae47](https://github.com/SP-Libraries/actions/commit/a78ae47fc7aaeaddd9556462483a29910d06c37f))
+* **lint-staged:** enforce strict mode for lintrc command ([85f8a2c](https://github.com/SP-Libraries/actions/commit/85f8a2cbd40c9f2cfe854e72664bc270bc59004b))
+* **tools:** update behavior and priorities for composer and npm tools ([da13f1b](https://github.com/SP-Libraries/actions/commit/da13f1b8063f624a6b6be67ad9e784e35ed52693))
+
 ## [0.3.1](https://github.com/SP-Libraries/actions/compare/v0.3.0...v0.3.1) (2025-08-18)
 
 ### Bug Fixes
