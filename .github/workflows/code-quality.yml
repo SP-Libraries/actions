@@ -38,4 +38,4 @@ jobs:
         if: ${{ steps.setup.outputs.has_node == 'true' }}
         run: |
           # Run the LintRC tool to check code quality
-          npx @sp-packages/lintrc ${{ inputs.VERBOSE && '--verbose' || '' }}
+          npx @sp-packages/lintrc --strict ${{ inputs.VERBOSE && '--verbose' || '' }}
