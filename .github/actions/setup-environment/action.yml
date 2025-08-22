@@ -224,7 +224,7 @@ runs:
       shell: bash
       run: |
         # Validate composer.json
-        composer validate --no-check-all --no-check-publish --no-interaction --strict
+        composer validate --no-interaction --strict
 
     - name: Install PHP Dependencies
       if: ${{ steps.detect-languages.outputs.setup_php == 'true' && steps.detect-languages.outputs.composer-json-exists == 'true' && inputs.INSTALL_DEPENDENCIES == 'true' }}
